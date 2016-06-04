@@ -1,0 +1,24 @@
+{
+    "name": "mcs/bol-plaza-v2",
+    "description": "Interact with the Bol.com Plaza API",
+    "license": "MIT",
+    "keywords": ["Bol.com", "Bol.com api", "Plaza api", "Bol.com Plaza Api"],
+    "authors": [
+        {
+            "name": "Michiel Meertens",
+            "email": "meertensmichiel28@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">= 5.4",
+        "ext-curl": "*",
+        "mayflower/holiday": "^0.7.0",
+        "league/csv": "^8.1"
+    },
+    "require-dev": {},
+    "autoload": {
+        "psr-4": {
+            "MCS\\": "src"
+        }
+    }
+}
