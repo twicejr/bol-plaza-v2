@@ -7,10 +7,10 @@ $ composer require mcs/bol-plaza-v2
 ```
 
 **Note:** Bol.com requires you to use their some parameter values they provide:
-1. [Transporters](https://developers.bol.com/documentatie/plaza-api/appendix-a-transporters/)
-2. [Conditions](https://developers.bol.com/documentatie/plaza-api/appendix-b-conditions/)
-3. [Delivery codes](https://developers.bol.com/documentatie/plaza-api/appendix-c-delivery-codes/)
-4. [Reasons](https://developers.bol.com/documentatie/plaza-api/appendix-d-reasons-errors/)
+- [Transporters](https://developers.bol.com/documentatie/plaza-api/appendix-a-transporters/)
+- [Conditions](https://developers.bol.com/documentatie/plaza-api/appendix-b-conditions/)
+- [Delivery codes](https://developers.bol.com/documentatie/plaza-api/appendix-c-delivery-codes/)
+- [Reasons](https://developers.bol.com/documentatie/plaza-api/appendix-d-reasons-errors/)
 
 ### Client
 ```php
