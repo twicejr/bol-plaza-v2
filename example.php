@@ -27,7 +27,7 @@
         $deliveryDate = $client->nextDeliveryDate(
             '18:00', // Until what time are orders shipped this day?
             ['Sun', 'Mon'], // On what days does the carrier not deliver packages?
-            ['Sat', 'Sun'], // On what days does the carrier pickup/collect packages?
+            ['Sat', 'Sun'], // On what days does the carrier not pickup/collect packages?
             '12:00' // The time of the delivery
         );
 
