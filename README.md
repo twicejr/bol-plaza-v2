@@ -6,7 +6,7 @@ Installation:
 $ composer require mcs/bol-plaza-v2
 ```
 
-**Note:** Bol.com requires you to use their some parameter values they provide:
+**Note:** Bol.com requires you to use their parameter values:
 - [Transporters](https://developers.bol.com/documentatie/plaza-api/appendix-a-transporters/)
 - [Conditions](https://developers.bol.com/documentatie/plaza-api/appendix-b-conditions/)
 - [Delivery codes](https://developers.bol.com/documentatie/plaza-api/appendix-c-delivery-codes/)
