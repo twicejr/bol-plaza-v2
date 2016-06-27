@@ -19,7 +19,7 @@ class BolPlazaOrderItem{
         foreach ($array as $property => $value) {
             if (property_exists($this, $property)) {
                 if (is_array($value)) {
-                    $value = null;
+                    $value = '';
                 }
                 $this->{$property} = $value;
             }

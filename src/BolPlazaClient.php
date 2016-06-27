@@ -426,6 +426,10 @@ class BolPlazaClient{
 
         $result = $this->request($this->endPoints['orders'], 'GET');
         
+        if (!isset($result['Order'])) {
+            return false; 
+        }
+        
         if ($this->is_assoc($result['Order'])) {
             $result['Order'] = $result;
         }
