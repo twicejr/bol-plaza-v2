@@ -82,6 +82,7 @@ if ($update) {
     echo 'Offer updated';    
 }
 
+// Create an offer
 $created = $client->createOffer('k002', [
     'EAN' => '8711145678987',
     'Condition' => 'NEW',
@@ -96,6 +97,7 @@ if ($created) {
     echo 'Offer created';    
 }
 
+// Delete an offer
 $delete = $client->deleteOffer('k001');
 if ($delete) {
     echo 'Offer deleted';    
