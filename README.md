@@ -66,16 +66,14 @@ $offerFile = $client->requestOfferFile();
 $offers = $client->getOffers($offerFile);
 
 //Update an offer's stock
-$offerId = 'k001';
-$quantity = 20;
-$update = $client->updateOfferStock($offerId, $quantity);
+$update = $client->updateOfferStock('k001', 20);
 if ($update) {
     echo 'Offer stock updated';    
 }
 
 $update = $client->updateOffer('k001', [
     'Price' => 12.95,
-    'DeliveryCode' => '24uurs-21', // https://developers.bol.com/documentatie/plaza-api/appendix-c-delivery-codes/
+    'DeliveryCode' => '24uurs-21',
     'Publish' => true,
     'ReferenceCode' => 'sku001',
     'Description' => 'Description...'
@@ -86,7 +84,7 @@ if ($update) {
 
 $created = $client->createOffer('k002', [
     'EAN' => '8711145678987',
-    'Condition' => 'NEW', // https://developers.bol.com/documentatie/plaza-api/appendix-b-conditions/
+    'Condition' => 'NEW',
     'Price' => 189.99,
     'DeliveryCode' => '24uurs-21',
     'QuantityInStock' => 100,
