@@ -37,7 +37,7 @@ class BolPlazaOrder{
      */
     public function addOrderItem(array $item)
     {
-        $this->OrderItems[] = new BolPlazaOrderItem($item);
+        $this->OrderItems[] = new BolPlazaOrderItem($item, $this->client);
     }
     
     /**
