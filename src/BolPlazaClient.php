@@ -24,6 +24,7 @@ class BolPlazaClient{
     public $endPoints = [
         'orders' => '/services/rest/orders/v2',
         'shipments' => '/services/rest/shipments/v2',
+        'cancellations' => '/services/rest/order-items/v2/:id/cancellation',
         'process-status' => '/services/rest/orders/v2/process/:id',
         'offers-export' => '/offers/v1/export',
         'offer-stock' => '/offers/v1/:id/stock',
