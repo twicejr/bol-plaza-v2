@@ -88,7 +88,7 @@ class BolPlazaOrder{
                 $xml->createElement('DateTime', $now->format($format))
             );
             $body->appendChild(
-                $xml->createElement('ExpectedDeliveryDate', $expected->format($format))
+                $xml->createElement('ExpectedDeliveryDate', $expected->format(DATE_ISO8601))
             );
             
             if ($carrier && $awb) {
