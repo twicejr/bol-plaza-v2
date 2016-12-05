@@ -4,7 +4,6 @@ namespace MCS;
 use DateTime;
 use Exception;
 use DOMDocument;
-use DateTimeZone;
 use MCS\BolPlazaOrderItem;
 use MCS\BolPlazaOrderAddress;
 
@@ -62,13 +61,9 @@ class BolPlazaOrder{
             throw new Exception('Carrier not allowed. Use one of: ' . implode(' / ', $carriers));    
         }
         
-        $timeZone = new DateTimeZone('Etc/Greenwich');
-        $format = 'Y-m-d\TH:i:s';
+        $format = 'Y-m-d\TH:i:sP';
         
         $now = new DateTime();
-        $now = $now->setTimezone($timeZone);
-        
-        $expected = $expectedDeliveryDate->setTimezone($timeZone);
         
         $response = [];
         
@@ -88,7 +83,7 @@ class BolPlazaOrder{
                 $xml->createElement('DateTime', $now->format($format))
             );
             $body->appendChild(
-                $xml->createElement('ExpectedDeliveryDate', $expected->format(DATE_ISO8601))
+                $xml->createElement('ExpectedDeliveryDate', $expectedDeliveryDate->format($format))
             );
             
             if ($carrier && $awb) {
