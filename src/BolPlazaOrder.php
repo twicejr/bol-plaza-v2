@@ -78,7 +78,7 @@ class BolPlazaOrder{
                 $xml->createElement('OrderItemId', $OrderItem->OrderItemId)
             );
             $body->appendChild(
-                $xml->createElement('ShipmentReference', substr($OrderItem->Title, 0, 100))
+                $xml->createElement('ShipmentReference', substr(htmlspecialchars($OrderItem->Title), 0, 100))
             );
             $body->appendChild(
                 $xml->createElement('DateTime', $now->format($format))
@@ -96,7 +96,7 @@ class BolPlazaOrder{
                 );
                 if ($awb) {
                     $transport->appendChild(
-                        $xml->createElement('TrackAndTrace', $awb)
+                        $xml->createElement('TrackAndTrace', htmlspecialchars($awb))
                     );
                 }
             }
