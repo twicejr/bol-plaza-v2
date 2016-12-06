@@ -87,16 +87,18 @@ class BolPlazaOrder{
                 $xml->createElement('ExpectedDeliveryDate', $expectedDeliveryDate->format($format))
             );
             
-            if ($carrier && $awb) {
+            if ($carrier) {
                 $transport = $body->appendChild(
                     $xml->createElement('Transport')
                 );
                 $transport->appendChild(
                     $xml->createElement('TransporterCode', $carrier)
                 );
-                $transport->appendChild(
-                    $xml->createElement('TrackAndTrace', $awb)
-                ); 
+                if ($awb) {
+                    $transport->appendChild(
+                        $xml->createElement('TrackAndTrace', $awb)
+                    );
+                }
             }
             
             $response[] = $this->client->request($this->client->endPoints['shipments'], 'POST', $xml->saveXML());
