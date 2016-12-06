@@ -78,7 +78,7 @@ class BolPlazaOrder{
                 $xml->createElement('OrderItemId', $OrderItem->OrderItemId)
             );
             $body->appendChild(
-                $xml->createElement('ShipmentReference', $OrderItem->Title)
+                $xml->createElement('ShipmentReference', substr($OrderItem->Title, 0, 100))
             );
             $body->appendChild(
                 $xml->createElement('DateTime', $now->format($format))
