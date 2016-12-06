@@ -97,10 +97,11 @@ class BolPlazaClient{
      */
     private function signature($httpMethod, $endPoint, $date)
     {   
-        $signature_string = $httpMethod . PHP_EOL . PHP_EOL;
-        $signature_string .= self::CONTENT_TYPE . PHP_EOL;
-        $signature_string .= $date . PHP_EOL;
-        $signature_string .= "x-bol-date:" . $date . PHP_EOL;
+        $newline = "\n";
+        $signature_string = $httpMethod . $newline . $newline;
+        $signature_string .= self::CONTENT_TYPE . $newline;
+        $signature_string .= $date . $newline;
+        $signature_string .= "x-bol-date:" . $date . $newline;
         $signature_string .= preg_replace('/\?.*/', '', $endPoint);
         return $this->publicKey . ':' . base64_encode(
             hash_hmac('SHA256', $signature_string, $this->privateKey, true)
