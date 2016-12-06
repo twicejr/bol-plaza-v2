@@ -23,9 +23,10 @@ class BolPlazaOrder{
      * @param array $BillingAddress  
      * @param object BolPlazaClient $client 
      */
-    public function __construct($id, array $ShippingAddress, array $BillingAddress, BolPlazaClient $client)
+    public function __construct($id, $DateTimeCustomer, array $ShippingAddress, array $BillingAddress, BolPlazaClient $client)
     {
         $this->id = $id;
+        $this->date = $DateTimeCustomer;
         $this->ShippingAddress = new BolPlazaOrderAddress($ShippingAddress);
         $this->BillingAddress = new BolPlazaOrderAddress($BillingAddress);
         $this->client = $client;
