@@ -56,6 +56,16 @@ if ($order) {
     print_r($shipped);
 }
 ```
+### Return functions
+```php
+// Get all returns
+$returns = $client->getReturns();
+if ($returns) {
+    foreach ($returns as $return) {
+        print_r($return);    
+    }
+}
+```
 ### Product functions
 ```php
 
