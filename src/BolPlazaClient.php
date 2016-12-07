@@ -7,6 +7,7 @@ use DOMDocument;
 use DateInterval;
 use SimpleXMLElement;
 use MCS\BolPlazaOrder;
+use MCS\BolPlazaReturn;
 use League\Csv\Reader;
 use Holiday\Netherlands;
 
@@ -24,6 +25,7 @@ class BolPlazaClient{
     public $endPoints = [
         'orders' => '/services/rest/orders/v2',
         'shipments' => '/services/rest/shipments/v2',
+        'returns' => '/services/rest/return-items/v2/unhandled',
         'cancellations' => '/services/rest/order-items/v2/:id/cancellation',
         'process-status' => '/services/rest/orders/v2/process/:id',
         'shipping-status' => '/services/rest/process-status/v2/:id',
@@ -474,6 +476,27 @@ class BolPlazaClient{
         } else {
             return false;    
         }
+    }
+    
+    public function getReturns()
+    {
+
+        $result = $this->request($this->endPoints['returns'], 'GET');
+        //print_r($result);die;
+        if (!isset($result['Item'])) {
+            return false; 
+        }
+        
+        if ($this->is_assoc($result['Item'])) {
+            $result['Item'] = [$result['Item']];
+        }
+            
+        $returns = [];
+        foreach ($result['Item'] as $return) {
+            $tmp = new BolPlazaReturn($return);
+            $returns[] = $tmp;
+        }
+        return $returns;
     }
     
     /**
