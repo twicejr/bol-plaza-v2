@@ -56,7 +56,8 @@ class BolPlazaOrder{
             'DHLFORYOU', 'UPS', 'KIALA_BE', 'KIALA_NL',
             'DYL', 'DPD_NL', 'DPD_BE', 'BPOST_BE',
             'FEDEX_BE', 'OTHER', 'DHL', 'SLV',
-            'TNT', 'TNT_EXTRA', 'TNT_BRIEF'
+            'TNT', 'TNT_EXTRA', 'TNT_BRIEF',
+            'TRANSMISSION'
         ];  
         
         if ($carrier && !in_array($carrier, $carriers)) {
