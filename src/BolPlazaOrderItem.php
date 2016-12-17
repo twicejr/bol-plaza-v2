@@ -34,7 +34,7 @@ class BolPlazaOrderItem{
         $this->Quantity = (int) $this->Quantity;
         $this->OfferPrice = (float) $this->OfferPrice;
         $this->TransactionFee = (float) $this->TransactionFee;
-        $this->CancelRequest = $this->CancelRequest === 'TRUE' ? true : false;
+        $this->CancelRequest = $this->CancelRequest == 'false' ? false : true;
         
         $this->client = $client;
     }
@@ -81,7 +81,6 @@ class BolPlazaOrderItem{
         $now = new DateTime();
         $now = $now->setTimezone($timeZone);
 
-
         $xml = new DOMDocument('1.0', 'UTF-8');
 
         $body = $xml->appendChild(
@@ -93,7 +92,6 @@ class BolPlazaOrderItem{
         $body->appendChild(
             $xml->createElement('ReasonCode', $reason)
         );
-
 
         return $this->client->request(
             str_replace(':id', urlencode($this->OrderItemId), $this->client->endPoints['cancellations']),
