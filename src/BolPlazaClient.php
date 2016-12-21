@@ -205,7 +205,6 @@ class BolPlazaClient{
         
         try {    
             $csv = $this->request($this->endPoints['offers-export'] . '/' . $fileName, 'GET'); 
-            file_put_contents('csv.csv',$csv);
             $csv = Reader::createFromString($csv);
             $headers = $csv->fetchOne();
             $array = [];
@@ -383,6 +382,8 @@ class BolPlazaClient{
         $array['Price'] = (float) str_replace(',', '.', $array['Price']);
         $array['Publish'] = (bool) $array['Publish'] == true ? 'true' : 'false';
         $array['QuantityInStock'] = (int) $array['QuantityInStock'];
+        $array['Description'] = htmlspecialchars($array['Description']);
+        $array['ReferenceCode'] = htmlspecialchars($array['ReferenceCode']);
         
         if (!in_array($array['DeliveryCode'], $this->deliveryCodes)) {
             throw new Exception('Unknown DeliveryCode');        
