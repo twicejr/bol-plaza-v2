@@ -471,7 +471,7 @@ class BolPlazaClient{
                     $tmp->addOrderItem($line);
                 }
 
-                $orders[] = $tmp;
+                $orders[$order['OrderId']] = $tmp;
             }
             return $orders;
         } else {
@@ -483,7 +483,7 @@ class BolPlazaClient{
     {
 
         $result = $this->request($this->endPoints['returns'], 'GET');
-        //print_r($result);die;
+        
         if (!isset($result['Item'])) {
             return false; 
         }
