@@ -29,6 +29,7 @@ class BolPlazaClient{
         'cancellations' => '/services/rest/order-items/v2/:id/cancellation',
         'process-status' => '/services/rest/orders/v2/process/:id',
         'shipping-status' => '/services/rest/process-status/v2/:id',
+        'payments' => '/services/rest/payments/v2/:month',
         'offers-export' => '/offers/v1/export',
         'offer-stock' => '/offers/v1/:id/stock',
         'offer-update' => '/offers/v1/:id',
@@ -182,6 +183,22 @@ class BolPlazaClient{
     {
         return $this->request(
             str_replace(':id', urlencode($id), $this->endPoints['shipping-status']), 
+        'GET');
+    }
+    
+    /**
+     * Get all payments for the provided month, 
+     * if no datatime is provided, the current month will be used 
+     * @return array array of payments
+     */
+    public function getPayments(DateTime $date = null)
+    {
+        if (is_null($date)) {
+            $date = new DateTime();
+        }
+     
+        return $this->request(
+            str_replace(':month', urlencode($date->format('Ym')), $this->endPoints['payments']), 
         'GET');
     }
 
