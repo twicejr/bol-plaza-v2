@@ -29,7 +29,9 @@ class BolPlazaClient{
         'cancellations' => '/services/rest/order-items/v2/:id/cancellation',
         'process-status' => '/services/rest/orders/v2/process/:id',
         'shipping-status' => '/services/rest/process-status/v2/:id',
-        'shipping-label' => '/services/rest/transports/v2/:transportId/shipping-label/:labelId',    
+        'shipping-label' => '/services/rest/transports/v2/:transportId/shipping-label/:labelId', 
+        'shipping-labels' => '/services/rest/purchasable-shipping-labels/v2?orderItemId=:id',     
+
         'payments' => '/services/rest/payments/v2/:month',
         'offers-export' => '/offers/v1/export',
         'offer-stock' => '/offers/v1/:id/stock',
@@ -192,6 +194,13 @@ class BolPlazaClient{
         $result = $this->request(str_replace(array(':transportId', ':labelId'), array(urlencode($transportId), urlencode($labelId)), $this->endPoints['shipping-label']),'GET');
         return($result);
     }
+  
+     public function getShippingLabels($orderItemId)
+    {
+        $result = $this->request(str_replace(':id', urlencode($orderItemId), $this->endPoints['shipping-labels']),'GET');
+        return($result);
+    }
+
 
     
     /**
