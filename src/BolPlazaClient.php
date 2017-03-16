@@ -61,6 +61,16 @@ class BolPlazaClient{
     ];
     
     /**
+     *Available fulfillment methods
+     */
+    private $fulfilmentMethods = [
+        'FBR', 
+        'FBB',
+        'ALL'
+    ];
+    
+    
+    /**
      * Construct the client
      * @param string  $publicKey      
      * @param string  $privateKey     
@@ -555,11 +565,13 @@ class BolPlazaClient{
     /**
      * Get shipments
      * @param  integer $page = 1
+     * @param string $fulfilmentmethod = 'ALL'
      * @return array of shipments
      */
-    public function getShipments($page = 1)
+    public function getShipments($page = 1, $fulfilmentmethod='ALL')
     {
-        return $this->request($this->endPoints['shipments'] . '?page=' . $page, 'GET');
+        $fulfilmentmethod = in_array($fulfilmentmethod, $this->fulfilmentMethods) ? $fulfilmentmethod : 'ALL';
+        return $this->request($this->endPoints['shipments'] . '?page=' . $page .  '&fulfilmentmethod=' . $fulfilmentmethod, 'GET');
     }
     
     /**
