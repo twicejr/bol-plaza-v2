@@ -249,10 +249,13 @@ class BolPlazaClient{
         
         try {    
             $csv = $this->request($this->endPoints['offers-export'] . '/' . $fileName, 'GET'); 
-            $csv = Reader::createFromString($csv);
-            $headers = $csv->fetchOne();
+            $csv_array = array();
+            foreach(explode(PHP_EOL, $csv) as $row) {
+                $csv_array[] = str_getcsv($row);
+            }
+            $headers = array_shift($csv_array);
             $array = [];
-            foreach ($csv->setOffset(1)->fetchAll() as $row) {
+            foreach ($csv_array as $row) {
                 $tmp = array_combine($headers, $row);
                 $tmp['Stock'] = (int) $tmp['Stock'];
                 $tmp['Price'] = (float) $tmp['Price'];
