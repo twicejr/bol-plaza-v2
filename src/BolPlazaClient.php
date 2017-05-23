@@ -8,7 +8,6 @@ use DateInterval;
 use SimpleXMLElement;
 use MCS\BolPlazaOrder;
 use MCS\BolPlazaReturn;
-use League\Csv\Reader;
 use Holiday\Netherlands;
 
 class BolPlazaClient{
@@ -32,12 +31,13 @@ class BolPlazaClient{
         'shipping-label' => '/services/rest/transports/v2/:transportId/shipping-label/:labelId', 
         'shipping-labels' => '/services/rest/purchasable-shipping-labels/v2?orderItemId=:id',     
 
+        'commission' => '/commission/v2/:ean',
         'payments' => '/services/rest/payments/v2/:month',
-        'offers-export' => '/offers/v1/export',
-        'offer-stock' => '/offers/v1/:id/stock',
-        'offer-update' => '/offers/v1/:id',
-        'offer-delete' => '/offers/v1/:id',
-        'offer-create' => '/offers/v1/:id'
+        
+        'offers-upsert' => '/offers/v2/',
+        'offers-export' => '/offers/v2/export',
+        'offers-delete' => '/offers/v2/',
+        'reductions' => '/reductions',
     ];
     
     public $deliveryCodes = [
@@ -85,9 +85,9 @@ class BolPlazaClient{
             $this->privateKey = $privateKey;
             $this->test = (bool) $test;
             if ($this->test) {
-                $this->url = 'https://test-plazaapi.bol.com:443';   
+                $this->url = 'https://test-plazaapi.bol.com';   
             } else {
-                $this->url = 'https://plazaapi.bol.com:443';  
+                $this->url = 'https://plazaapi.bol.com';  
             }
         }
     }
@@ -138,8 +138,8 @@ class BolPlazaClient{
         $httpMethod = strtoupper($httpMethod);
         $config = [
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_SSL_VERIFYHOST => false,
-            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => 2,
+            CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_CUSTOMREQUEST => $httpMethod,
             CURLOPT_USERAGENT => self::USER_AGENT,
             CURLOPT_URL => $this->url . $endPoint,
@@ -157,6 +157,8 @@ class BolPlazaClient{
         $ch = curl_init();
         curl_setopt_array($ch, $config);
         $result = curl_exec($ch);
+        
+        $info = curl_getinfo($ch);
      
         if ($result === false) {
             throw new BolPlazaClientHttpException(curl_error($ch)); 
@@ -177,7 +179,7 @@ class BolPlazaClient{
         } else if (substr($info['http_code'], 0, 1) === 4) {
             throw new BolPlazaClientHttpException($info['http_code']); 
         }
-        return is_object($result) ? $this->toArray($result) : $result;
+        return $result ? (is_object($result) ? $this->toArray($result) : $result) : $info;
     }
     
     /**
@@ -238,166 +240,45 @@ class BolPlazaClient{
     private function is_assoc(array $array) {
       return (bool) count(array_filter(array_keys($array), 'is_string'));
     }
-    
-    /**
-     * Get the content from an offerfile
-     * @param  string $fileName the csv filename
-     * @return array 
-     */
-    public function getOffers($fileName)
-    {
         
-        try {    
-            $csv = $this->request($this->endPoints['offers-export'] . '/' . $fileName, 'GET'); 
-            $csv_array = array();
-            foreach(explode(PHP_EOL, $csv) as $row) {
-                $csv_array[] = str_getcsv($row);
+    /**
+     * Get all current offers by using csv export file / parsing it.
+     * @return array((reference) => (offer data))
+     */
+    public function getOffers()
+    {
+        $result_file = $this->request($this->endPoints['offers-export'], 'GET');
+        if(!isset($result_file['Url'])) {
+            return;
+        }
+        
+        $url_no_domain = substr($result_file['Url'], strpos($result_file['Url'], $this->url) + strlen($this->url));
+        $result_offers = $this->request($url_no_domain, 'GET');
+        $rows = explode(PHP_EOL, $result_offers);
+        $head = str_getcsv(array_shift($rows));
+        
+        $return = array();
+        foreach($rows as $key => $row) {
+            if(!$row) {
+                break;
             }
-            $headers = array_shift($csv_array);
-            $array = [];
-            foreach ($csv_array as $row) {
-                $tmp = array_combine($headers, $row);
-                $tmp['Stock'] = (int) $tmp['Stock'];
-                $tmp['Price'] = (float) $tmp['Price'];
-                $tmp['Publish'] = $tmp['Publish'] === 'TRUE' ? true : false;
-                $tmp['Published'] = $tmp['Published'] === 'TRUE' ? true : false;
-                $array[] = $tmp;    
-            }
-            return $array;
-        } catch (BolPlazaClientHttpException $e) {
-            $code = $e->getErrorCode();
-            if (in_array($code, ['41300', '41301'])) {
-                throw new BolPlazaClientHttpException(str_replace('%s', $fileName, $e->getMessage()));    
+            $parsed_row = str_getcsv($row);
+            
+            foreach($parsed_row as $csvkey => $csvval) {
+                        //ean
+                $return[$parsed_row[6]][$head[$csvkey]] = $csvval;
             }
         }
-    }
-    
-    /**
-     * Request an offerfile
-     * @return string on success
-     */
-    public function requestOfferFile()
-    {
-        $result = $this->request($this->endPoints['offers-export'], 'GET'); 
-        
-        if (isset($result['Url'])) {
-            $file = explode('/', $result['Url']);
-            return end($file);
-        }
-    
-        return false;
-    }
-    
-    /**
-     * Update an offer's stock
-     * @param  string  $offerId  
-     * @param  integer $quantity 
-     * @return boolean 
-     */
-    public function updateOfferStock($offerId, $quantity)
-    {
-     
-        $xml = new DOMDocument('1.0', 'UTF-8');
-
-        $body = $xml->appendChild(
-            $xml->createElementNS('http://plazaapi.bol.com/offers/xsd/api-1.0.xsd', 'StockUpdate')
-        );
-        $body->appendChild(
-            $xml->createElement('QuantityInStock', (int) $quantity)
-        );
-        
-        $result = $this->request(
-            str_replace(':id', urlencode($offerId), $this->endPoints['offer-stock']), 'PUT', $xml->saveXML()
-        );
-        
-        return true;
-    }
-    
-    /**
-     * Delete an offer
-     * @param  string  $offerId 
-     * @return boolean 
-     */
-    public function deleteOffer($offerId)
-    {
-     
-        $result = $this->request(
-            str_replace(':id', urlencode($offerId), $this->endPoints['offer-delete']), 'DELETE'
-        );
-        
-        return true;
-    }
-    
-    /**
-     * Update an offer
-     * @param  string  $offerId 
-     * @param  array   $array   
-     * @return boolean 
-     */
-    public function updateOffer($offerId, array $array)
-    {
-     
-        $fields = [
-            'Price',
-            'DeliveryCode',
-            'Publish',
-            'ReferenceCode',
-            'Description'
-        ];
-        
-        foreach ($fields as $field) {
-            if (isset($array[$field])) {
-                $array[$field] = utf8_encode($array[$field]);    
-            } else {
-                throw new Exception('Field `' . $field . '` not set');
-            }
-        }
-        
-        $array['Price'] = (float) str_replace(',', '.', $array['Price']);
-        $array['Publish'] = (bool) $array['Publish'] == true ? 'true' : 'false';
-        
-        if (!in_array($array['DeliveryCode'], $this->deliveryCodes)) {
-            throw new Exception('Unknown DeliveryCode');        
-        }
-        
-        if (mb_strlen($array['ReferenceCode'], '8bit') > 20) {
-            throw new Exception('ReferenceCode exceeded 20 bytes');    
-        }
-        
-        if (mb_strlen($array['Description'], '8bit') > 2000) {
-            throw new Exception('Description exceeded 2000 bytes');    
-        }
-        
-        if ($array['Price'] > 9999.99) {
-            throw new Exception('Too expensive');    
-        }
-        
-        $xml = new DOMDocument('1.0', 'UTF-8');
-
-        $body = $xml->appendChild(
-            $xml->createElementNS('http://plazaapi.bol.com/offers/xsd/api-1.0.xsd', 'OfferUpdate')
-        );
-        
-        foreach ($array as $key => $value) {
-            $body->appendChild(
-                $xml->createElement($key, $value)
-            );
-        }
-        
-        $result = $this->request(
-            str_replace(':id', urlencode($offerId), $this->endPoints['offer-update']), 'PUT', $xml->saveXML()
-        );
-        
-        return true;
+        return $return;
     }
     
     /**
      * Submit a new offer to the Bol.com Plaza Api
      * @param  string  $offerID            
      * @param  array
-     * @return boolean
+     * @return boolean  success
      */
-    public function createOffer($offerID, array $array = [])
+    public function upsertOffer(array $array = [])
     {
         $fields = [
             'EAN',
@@ -407,7 +288,8 @@ class BolPlazaClient{
             'QuantityInStock',
             'Publish',
             'ReferenceCode',
-            'Description'
+            'Description',
+            'Title'             // for new products without known EAN, this title will be shown instead of the known one @ bol
         ];
         
         $conditions = [
@@ -419,7 +301,7 @@ class BolPlazaClient{
         ];
         
         foreach ($fields as $field) {
-            if (isset($array[$field])) {
+            if (array_key_exists($field, $array)) {
                 $array[$field] = utf8_encode($array[$field]);    
             } else {
                 throw new Exception('Field `' . $field . '` not set');
@@ -463,20 +345,49 @@ class BolPlazaClient{
         $xml = new DOMDocument('1.0', 'UTF-8');
 
         $body = $xml->appendChild(
-            $xml->createElementNS('http://plazaapi.bol.com/offers/xsd/api-1.0.xsd', 'OfferCreate')
+            $xml->createElementNS('https://plazaapi.bol.com/offers/xsd/api-2.0.xsd', 'UpsertRequest')
         );
+        $offer = $body->appendChild($xml->createElement('RetailerOffer'));
         
         foreach ($array as $key => $value) {
-            $body->appendChild(
+            $offer->appendChild(
                 $xml->createElement($key, $value)
             );
         }
         
         $result = $this->request(
-            str_replace(':id', urlencode($offerID), $this->endPoints['offer-create']), 'POST', $xml->saveXML()
+            $this->endPoints['offers-upsert'], 'PUT', $xml->saveXML()
         );
         
-        return true;
+        return isset($result['http_code']) && $result['http_code'] == 202;
+    }
+    
+    /**
+     * Delete an offer via the Bol.com Plaza Api
+     * @param  string  $ean            
+     * @param  string  $condition 
+     * @return boolean  success
+     */
+    public function deleteOffer($ean, $condition = 'NEW')
+    {
+        $xml = new DOMDocument('1.0', 'UTF-8');
+
+        $body = $xml->appendChild(
+            $xml->createElementNS('https://plazaapi.bol.com/offers/xsd/api-2.0.xsd', 'DeleteBulkRequest')
+        );
+        $offer = $body->appendChild($xml->createElement('RetailerOfferIdentifier'));
+        
+        foreach (array('EAN' => $ean, 'Condition' => $condition) as $key => $value) {
+            $offer->appendChild(
+                $xml->createElement($key, $value)
+            );
+        }
+        
+        $result = $this->request(
+            $this->endPoints['offers-delete'], 'DELETE', $xml->saveXML()
+        );
+        
+        return isset($result['http_code']) && $result['http_code'] == 202;
     }
     
     /**
@@ -485,7 +396,6 @@ class BolPlazaClient{
      */
     public function getOrders()
     {
-
         $result = $this->request($this->endPoints['orders'], 'GET');
         
         if (!isset($result['Order'])) {
@@ -575,6 +485,42 @@ class BolPlazaClient{
     {
         $fulfilmentmethod = in_array($fulfilmentmethod, $this->fulfilmentMethods) ? $fulfilmentmethod : 'ALL';
         return $this->request($this->endPoints['shipments'] . '?page=' . $page .  '&fulfilmentmethod=' . $fulfilmentmethod, 'GET');
+    }
+    
+    /**
+     * Retrieves commission information on a single offer
+     * @param  integer $ean
+     */
+    public function getReductions()
+    {
+        $result = $this->request($this->endPoints['reductions'], 'GET');
+        
+        $rows = explode(PHP_EOL, $result);
+        $head = str_getcsv(array_shift($rows));
+        
+        $return = array();
+        foreach($rows as $row) {
+            if(!$row) {
+                break;
+            }
+            $parsed_row = str_getcsv($row);
+            
+            foreach($parsed_row as $csvkey => $csvval) {
+                $return[$parsed_row[0]][$head[$csvkey]] = $csvval;
+            }
+        }
+        return $return;
+    }
+    
+    /**
+     * Retrieves commission information on a single offer
+     * @param  integer $ean
+     */
+    public function getCommission($ean)
+    {
+        return $this->request(
+            str_replace(':ean', urlencode($ean), $this->endPoints['commission']), 
+        'GET');
     }
     
     /**
