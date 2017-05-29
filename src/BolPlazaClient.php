@@ -260,21 +260,37 @@ class BolPlazaClient{
     }
     
     /**
-     * Get all current offers by using csv export file / parsing it.
-     * @return array((reference) => (offer data))
+     * Get file to use with getOffers later (when bol has finished processing)
+     * @return string
      */
-    public function getOffers()
+    public function getOffersFile()
     {
         $result_file = $this->request($this->endPoints['offers-export'], 'GET');
         if(!isset($result_file['Url'])) {
             return;
         }
+        return $result_file['Url'];
+    }
+    
+    /**
+     * Get all current offers by using csv export file / parsing it.
+     * @param  string $file  (relative) path to file
+     * @return array((reference) => (offer data))
+     */
+    public function getOffers($file = null)
+    {
+        if(!$file) {
+            $file = $this->getOffersFile();
+            if(!$file) {
+                return array();
+            }
+        }
         
-        $url_no_domain = substr($result_file['Url'], strpos($result_file['Url'], $this->url) + strlen($this->url));
+        $url_no_domain = substr($file, strpos($file, $this->url) + strlen($this->url));
         $result_offers = $this->request($url_no_domain, 'GET');
+        
         if(is_array($result_offers) && isset($result_offers['ServiceErrors']['ServiceError']['ErrorCode'])
-        && $result_offers['ServiceErrors']['ServiceError']['ErrorCode'] === '43100') //is error info; still processing probably.
-        {
+        && $result_offers['ServiceErrors']['ServiceError']['ErrorCode'] === '43100') { //still processing 
             return array();
         }
         $rows = explode(PHP_EOL, $result_offers);
