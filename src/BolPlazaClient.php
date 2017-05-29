@@ -34,6 +34,7 @@ class BolPlazaClient{
         'commission' => '/commission/v2/:ean',
         'payments' => '/services/rest/payments/v2/:month',
         
+        'offers-get' => '/offers/v2/:ean',
         'offers-upsert' => '/offers/v2/',
         'offers-export' => '/offers/v2/export',
         'offers-delete' => '/offers/v2/',
@@ -241,6 +242,23 @@ class BolPlazaClient{
       return (bool) count(array_filter(array_keys($array), 'is_string'));
     }
         
+    
+    
+    /**
+     * Retrieves commission information on a single offer
+     * @param  integer $ean
+     */
+    public function getOffer($ean, $condition = 'NEW')
+    {
+        $offer = $this->request(
+            str_replace(':ean', urlencode($ean), $this->endPoints['offers-get']) . '?condition=' . $condition, 
+        'GET');
+        if(isset($offer['RetailerOffers']['RetailerOffer']))
+        {
+            return $offer['RetailerOffers']['RetailerOffer'];
+        }
+    }
+    
     /**
      * Get all current offers by using csv export file / parsing it.
      * @return array((reference) => (offer data))
@@ -276,7 +294,7 @@ class BolPlazaClient{
      * Submit a new offer to the Bol.com Plaza Api
      * @param  string  $offerID            
      * @param  array
-     * @return boolean  success
+     * @return boolean  error information if any
      */
     public function upsertOffer(array $array = [])
     {
@@ -359,7 +377,7 @@ class BolPlazaClient{
             $this->endPoints['offers-upsert'], 'PUT', $xml->saveXML()
         );
         
-        return isset($result['http_code']) && $result['http_code'] == 202;
+        return isset($result['http_code']) && $result['http_code'] == 202 ? false : $result;
     }
     
     /**
