@@ -272,10 +272,10 @@ class BolPlazaClient{
         
         $url_no_domain = substr($result_file['Url'], strpos($result_file['Url'], $this->url) + strlen($this->url));
         $result_offers = $this->request($url_no_domain, 'GET');
-        if(is_array($result_offers))
+        if(is_array($result_offers) && isset($result_offers['ServiceErrors']['ServiceError']['ErrorCode'])
+        && $result_offers['ServiceErrors']['ServiceError']['ErrorCode'] === '43100') //is error info; still processing probably.
         {
-           echo 'offer wtf';
-            var_dump($result_offers);exit;
+            return array();
         }
         $rows = explode(PHP_EOL, $result_offers);
         $head = str_getcsv(array_shift($rows));
