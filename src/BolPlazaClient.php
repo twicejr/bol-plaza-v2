@@ -272,6 +272,11 @@ class BolPlazaClient{
         
         $url_no_domain = substr($result_file['Url'], strpos($result_file['Url'], $this->url) + strlen($this->url));
         $result_offers = $this->request($url_no_domain, 'GET');
+        if(is_array($result_offers))
+        {
+           echo 'offer wtf';
+            var_dump($result_offers);exit;
+        }
         $rows = explode(PHP_EOL, $result_offers);
         $head = str_getcsv(array_shift($rows));
         
