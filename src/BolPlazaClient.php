@@ -277,7 +277,7 @@ class BolPlazaClient{
      * @param  string $file  (relative) path to file
      * @return array((reference) => (offer data))
      */
-    public function getOffers($file = null)
+    public function getOffers($file = null, $wait = null)
     {
         if(!$file) {
             $file = $this->getOffersFile();
@@ -287,10 +287,13 @@ class BolPlazaClient{
         }
         
         $url_no_domain = substr($file, strpos($file, $this->url) + strlen($this->url));
+        if($wait)
+        {
+            sleep($wait);
+        }
         $result_offers = $this->request($url_no_domain, 'GET');
         
-        if(is_array($result_offers) && isset($result_offers['ServiceErrors']['ServiceError']['ErrorCode'])
-        && $result_offers['ServiceErrors']['ServiceError']['ErrorCode'] === '43100') { //still processing 
+        if(is_array($result_offers)) { //still processing 
             return array();
         }
         $rows = explode(PHP_EOL, $result_offers);
